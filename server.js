@@ -14,6 +14,7 @@ app.use(cors());
 // Define Routes
 app.use('/api/users', require('./routes/api/users'));
 app.use('/api/auth', require('./routes/api/auth'));
+app.use('/api/workout', require('./routes/api/workout'));
 
 app.listen(port, () =>
   console.log(`Example app listening at http://localhost:${port}`)

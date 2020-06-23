@@ -6,6 +6,8 @@ const jwt = require('jsonwebtoken');
 const config = require('config');
 const { check, validationResult } = require('express-validator');
 
+const tokenList = {};
+
 const User = require('../../models/User');
 
 // @route    POST api/auth
@@ -49,20 +51,92 @@ router.post(
         },
       };
 
-      jwt.sign(
-        payload,
-        config.get('jwtSecret'),
-        { expiresIn: '5 days' },
-        (err, token) => {
-          if (err) throw err;
-          res.json({ token });
-        }
-      );
+      const token = jwt.sign(payload, config.get('jwtSecret'), {
+        expiresIn: config.get('tokenLife'),
+      });
+      const refreshToken = jwt.sign(payload, config.get('refreshTokenSecret'), {
+        expiresIn: config.get('refreshTokenLife'),
+      });
+
+      const response = {
+        status: 'Logged In',
+        token: token,
+        refreshToken: refreshToken,
+      };
+
+      tokenList[refreshToken] = response;
+
+      res.status(200).json(response);
     } catch (err) {
       console.error(err.message);
       res.status(500).send('Server error');
     }
   }
 );
+
+router.post('/token', (req, res) => {
+  // refresh the damn token
+  const token = req.body.refreshToken;
+  console.log('user: ', req.user);
+  console.log(jwt.decode(token));
+  const { user } = jwt.decode(token);
+
+  const payload = {
+    user: {
+      id: user.id,
+      name: user.name,
+    },
+  };
+
+  // Verify token
+  try {
+    jwt.verify(token, config.get('refreshTokenSecret'), (error, decoded) => {
+      if (error) {
+        return res.status(401).json({ msg: 'Refresh Token is not valid' });
+      } else {
+        const token = jwt.sign(payload, config.get('jwtSecret'), {
+          expiresIn: config.get('tokenLife'),
+        });
+
+        const refreshToken = jwt.sign(
+          payload,
+          config.get('refreshTokenSecret'),
+          {
+            expiresIn: config.get('refreshTokenLife'),
+          }
+        );
+
+        const response = {
+          status: 'Logged In',
+          token: token,
+          refreshToken: refreshToken,
+        };
+
+        return res.status(201).json(response);
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server Error' });
+  }
+
+  // if (postData.refreshToken && postData.refreshToken in tokenList) {
+  //   const user = {
+  //     email: postData.email,
+  //     name: postData.name,
+  //   };
+  //   const token = jwt.sign(user, config.jwtSecret, {
+  //     expiresIn: config.tokenLife,
+  //   });
+  //   const response = {
+  //     token: token,
+  //   };
+  //   // update the token in the list
+  //   tokenList[postData.refreshToken].token = token;
+  //   res.status(200).json(response);
+  // } else {
+  //   res.status(404).send('Invalid request');
+  // }
+});
 
 module.exports = router;

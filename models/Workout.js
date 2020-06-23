@@ -8,7 +8,7 @@ const WorkoutSchema = new mongoose.Schema({
   exercises: [
     {
       exercise: {
-        type: Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
       },
     },
   ],

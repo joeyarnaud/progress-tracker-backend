@@ -1,4 +1,7 @@
 {
   "mongoURI": "mongodb+srv://Jarnaud:ProgressiveOverload@cluster0-qior7.mongodb.net/progessive-backend?retryWrites=true&w=majority",
-  "jwtSecret": "secret"
+  "jwtSecret": "secret",
+  "refreshTokenSecret": "refresh-secret",
+  "tokenLife": 60,
+  "refreshTokenLife": 86400
 }
