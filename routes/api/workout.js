@@ -31,6 +31,14 @@ router.post(
 
       const exercises = [];
 
+      const newWorkout = new Workout({
+        name: req.body.name,
+        exercises: [],
+        user: req.user.id,
+      });
+
+      console.log(newWorkout);
+
       for (exercise in req.body.exercises) {
         const newExercise = new Exercise({
           name: req.body.exercises[exercise].name,
@@ -42,28 +50,13 @@ router.post(
               reps: req.body.exercises[exercise].reps,
             },
           ],
+          workouts: [newWorkout._id],
         });
 
-        const ex = newExercise.save();
+        const ex = await newExercise.save();
 
-        exercises.push({
-          name: req.body.exercises[exercise].name,
-          user: req.user.id,
-          inputs: [
-            {
-              weight: req.body.exercises[exercise].weight,
-              sets: req.body.exercises[exercise].sets,
-              reps: req.body.exercises[exercise].reps,
-            },
-          ],
-        });
+        newWorkout.exercises.push(ex._id);
       }
-
-      const newWorkout = new Workout({
-        name: req.body.name,
-        exercises: exercises,
-        user: req.user.id,
-      });
 
       const workout = await newWorkout.save();
 
@@ -80,7 +73,12 @@ router.post(
 // @access   Private
 router.get('/', auth, async (req, res) => {
   try {
-    const workouts = await Workout.find().sort({ date: -1 });
+    const workouts = await Workout.find({ user: req.user.id })
+      .populate({ path: 'exercises', model: Exercise })
+      .sort({
+        date: -1,
+      });
+
     res.json(workouts);
   } catch (err) {
     console.error(err.message);
@@ -93,9 +91,33 @@ router.get('/', auth, async (req, res) => {
 // @access   Private
 router.get('/:id', [auth, checkObjectId('id')], async (req, res) => {
   try {
-    const workout = await Workout.findById(req.params.id);
+    const workout = await Workout.findById(req.params.id).populate({
+      path: 'exercises',
+      model: Exercise,
+    });
 
     res.json(workout);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route DELETE api/workout/:id
+// @desc Delete the data of a workout
+// @access Private
+router.delete('/:id', [auth, checkObjectId('id')], async (req, res) => {
+  try {
+    const workout = await Workout.findById(req.params.id);
+
+    await Exercise.updateMany(
+      { _id: { $in: workout.exercises } },
+      { $pull: { workouts: req.params.id } }
+    );
+
+    workout.delete();
+
+    res.json({ _id: req.params.id });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');

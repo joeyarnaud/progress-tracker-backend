@@ -8,34 +8,55 @@ const Exercise = require('../../models/Exercise');
 const User = require('../../models/User');
 const checkObjectId = require('../../middleware/checkObjectId');
 
-// @route    POST api/
-// @desc     Create a post
+// @route    POST api/exercise
+// @desc     get all exercises
 // @access   Private
-router.post(
-  '/',
-  [auth, [check('text', 'Text is required').not().isEmpty()]],
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+router.get('/', [auth], async (req, res) => {
+  try {
+    const exercises = await Exercise.find({ user: req.user.id }).sort({
+      date: -1,
+    });
 
-    try {
-      const user = await User.findById(req.user.id).select('-password');
-
-      const newPost = new Post({
-        text: req.body.text,
-        name: user.name,
-        avatar: user.avatar,
-        user: req.user.id,
-      });
-
-      const post = await newPost.save();
-
-      res.json(post);
-    } catch (err) {
-      console.error(err.message);
-      res.status(500).send('Server Error');
-    }
+    res.json(exercises);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
   }
-);
+});
+
+// @route    GET api/exercise/:id
+// @desc     Get the data of a specific exercise
+// @access   Private
+router.get('/:id', [auth, checkObjectId('id')], async (req, res) => {
+  try {
+    const exercise = await Exercise.findById(req.params.id);
+
+    res.json(exercise);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    DELETE api/exercise/:id
+// @desc     DELETE the data of a specific exercise
+// @access   Private
+router.delete('/:id', [auth, checkObjectId('id')], async (req, res) => {
+  try {
+    const exercise = await Exercise.findById(req.params.id);
+
+    await Workout.updateMany(
+      { _id: { $in: exercise.workouts } },
+      { $pull: { exercises: req.params.id } }
+    );
+
+    exercise.delete();
+
+    res.json({ _id: req.params.id });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+module.exports = router;

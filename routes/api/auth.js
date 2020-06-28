@@ -77,8 +77,6 @@ router.post(
 router.post('/token', (req, res) => {
   // refresh the damn token
   const token = req.body.refreshToken;
-  console.log('user: ', req.user);
-  console.log(jwt.decode(token));
   const { user } = jwt.decode(token);
 
   const payload = {
@@ -119,24 +117,6 @@ router.post('/token', (req, res) => {
     console.error(err);
     res.status(500).json({ msg: 'Server Error' });
   }
-
-  // if (postData.refreshToken && postData.refreshToken in tokenList) {
-  //   const user = {
-  //     email: postData.email,
-  //     name: postData.name,
-  //   };
-  //   const token = jwt.sign(user, config.jwtSecret, {
-  //     expiresIn: config.tokenLife,
-  //   });
-  //   const response = {
-  //     token: token,
-  //   };
-  //   // update the token in the list
-  //   tokenList[postData.refreshToken].token = token;
-  //   res.status(200).json(response);
-  // } else {
-  //   res.status(404).send('Invalid request');
-  // }
 });
 
 module.exports = router;

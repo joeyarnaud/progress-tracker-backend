@@ -25,7 +25,8 @@ const ExerciseSchema = new mongoose.Schema({
       },
     },
   ],
-  user: { type: mongoose.Schema.Types.ObjectId },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  workouts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Workout' }],
   date: {
     type: Date,
     default: Date.now,
