@@ -29,7 +29,10 @@ router.get('/', [auth], async (req, res) => {
 // @access   Private
 router.get('/:id', [auth, checkObjectId('id')], async (req, res) => {
   try {
-    const exercise = await Exercise.findById(req.params.id);
+    const exercise = await Exercise.findById(req.params.id).populate({
+      path: 'workouts',
+      model: Workout,
+    });
 
     res.json(exercise);
   } catch (err) {
@@ -58,5 +61,74 @@ router.delete('/:id', [auth, checkObjectId('id')], async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
+
+// @route    PUT api/exercise/:id/input/:input_id
+// @desc     Delete an input of the exercise
+// @access   Private
+router.put(
+  '/:id/delete-input/:input_id',
+  [auth, checkObjectId('id')],
+  async (req, res) => {
+    console.log(req.params);
+    try {
+      const exercise = await Exercise.findByIdAndUpdate(
+        req.params.id,
+        {
+          $pull: { inputs: { _id: req.params.input_id } },
+        },
+        { returnOriginal: false }
+      );
+
+      res.json(exercise);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+    }
+  }
+);
+
+// @route    PUT api/exercise/:id/input
+// @desc     add an input to the exercise
+// @access   Private
+router.put('/:id/add-input', [auth, checkObjectId('id')], async (req, res) => {
+  try {
+    const exercise = await Exercise.findByIdAndUpdate(
+      req.params.id,
+      {
+        $push: { inputs: { $each: [req.body.input], $sort: { date: 1 } } },
+      },
+      { returnOriginal: false }
+    );
+
+    res.json(exercise);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route PUT api/exercise/change-name/:id
+// @desc change a name of the exercise
+// @access Private
+router.put(
+  '/change-name/:id',
+  [auth, checkObjectId('id')],
+  async (req, res) => {
+    try {
+      const exercise = await Exercise.findByIdAndUpdate(
+        req.params.id,
+        {
+          $set: { name: req.body.name },
+        },
+        { returnOriginal: false }
+      ).populate({ path: 'exercises', model: Exercise });
+
+      res.json(exercise);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+    }
+  }
+);
 
 module.exports = router;

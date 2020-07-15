@@ -48,6 +48,8 @@ router.post(
               weight: req.body.exercises[exercise].weight,
               sets: req.body.exercises[exercise].sets,
               reps: req.body.exercises[exercise].reps,
+              type: req.body.exercises[exercise].type,
+              date: req.body.exercises[exercise].date,
             },
           ],
           workouts: [newWorkout._id],
@@ -123,5 +125,63 @@ router.delete('/:id', [auth, checkObjectId('id')], async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
+
+// @route PUT api/workout/:id
+// @desc add an exercise to a workout
+// @access Private
+router.put(
+  '/add-exercise/:id',
+  [auth, checkObjectId('id')],
+  async (req, res) => {
+    try {
+      const exercise = new Exercise({
+        name: req.body.name,
+        user: req.user.id,
+        inputs: [
+          {
+            weight: req.body.weight,
+            sets: req.body.sets,
+            reps: req.body.reps,
+            type: req.body.type,
+            date: req.body.date,
+          },
+        ],
+        workouts: [req.params.id],
+      });
+
+      const workout = await Workout.findByIdAndUpdate(req.params.id, {
+        $push: { exercises: exercise._id },
+      });
+
+      workout.save();
+      exercise.save();
+
+      res.json(exercise);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+    }
+  }
+);
+
+// @route PUT api/workout/change-name/:id
+// @desc change a name of the workout
+// @access Private
+router.put(
+  '/change-name/:id',
+  [auth, checkObjectId('id')],
+  async (req, res) => {
+    try {
+      const workout = await Workout.findByIdAndUpdate(req.params.id, {
+        $set: { name: req.body.name },
+      }).populate({ path: 'exercises', model: Exercise });
+
+      res.json({ ...workout._doc, name: req.body.name });
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+    }
+  }
+);
 
 module.exports = router;

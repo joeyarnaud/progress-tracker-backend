@@ -11,6 +11,10 @@ const ExerciseSchema = new mongoose.Schema({
         type: Number,
         default: 0,
       },
+      type: {
+        type: String,
+        default: 'kg',
+      },
       sets: {
         type: Number,
         default: 1,
@@ -20,6 +24,10 @@ const ExerciseSchema = new mongoose.Schema({
         default: 1,
       },
       date: {
+        type: Date,
+        default: Date.now,
+      },
+      created_at: {
         type: Date,
         default: Date.now,
       },
