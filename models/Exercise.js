@@ -7,30 +7,8 @@ const ExerciseSchema = new mongoose.Schema({
   },
   inputs: [
     {
-      weight: {
-        type: Number,
-        default: 0,
-      },
-      type: {
-        type: String,
-        default: 'kg',
-      },
-      sets: {
-        type: Number,
-        default: 1,
-      },
-      reps: {
-        type: Number,
-        default: 1,
-      },
-      date: {
-        type: Date,
-        default: Date.now,
-      },
-      created_at: {
-        type: Date,
-        default: Date.now,
-      },
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Input',
     },
   ],
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

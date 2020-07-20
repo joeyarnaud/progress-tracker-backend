@@ -5,6 +5,7 @@ const auth = require('../../middleware/auth');
 
 const Workout = require('../../models/Workout');
 const Exercise = require('../../models/Exercise');
+const Input = require('../../models/Input');
 const User = require('../../models/User');
 const checkObjectId = require('../../middleware/checkObjectId');
 
@@ -43,17 +44,23 @@ router.post(
         const newExercise = new Exercise({
           name: req.body.exercises[exercise].name,
           user: req.user.id,
-          inputs: [
-            {
-              weight: req.body.exercises[exercise].weight,
-              sets: req.body.exercises[exercise].sets,
-              reps: req.body.exercises[exercise].reps,
-              type: req.body.exercises[exercise].type,
-              date: req.body.exercises[exercise].date,
-            },
-          ],
+          inputs: [],
           workouts: [newWorkout._id],
         });
+
+        const newInput = new Input({
+          weight: req.body.exercises[exercise].weight,
+          sets: req.body.exercises[exercise].sets,
+          reps: req.body.exercises[exercise].reps,
+          type: req.body.exercises[exercise].type,
+          date: req.body.exercises[exercise].date,
+          user: req.user.id,
+          exercise: newExercise._id,
+        });
+
+        const inp = await newInput.save();
+
+        newExercise.inputs.push(newInput._id);
 
         const ex = await newExercise.save();
 
@@ -96,6 +103,10 @@ router.get('/:id', [auth, checkObjectId('id')], async (req, res) => {
     const workout = await Workout.findById(req.params.id).populate({
       path: 'exercises',
       model: Exercise,
+      populate: {
+        path: 'inputs',
+        model: Input,
+      },
     });
 
     res.json(workout);

@@ -3,21 +3,62 @@ const router = express.Router();
 const { check, validationResult } = require('express-validator');
 const auth = require('../../middleware/auth');
 
+const Input = require('../../models/Input');
 const Workout = require('../../models/Workout');
 const Exercise = require('../../models/Exercise');
+
 const User = require('../../models/User');
+
 const checkObjectId = require('../../middleware/checkObjectId');
 
-// @route    POST api/exercise
+// @route    GET api/exercise
 // @desc     get all exercises
 // @access   Private
 router.get('/', [auth], async (req, res) => {
   try {
-    const exercises = await Exercise.find({ user: req.user.id }).sort({
-      date: -1,
-    });
+    console.log('here');
+    const exercises = await Exercise.find({ user: req.user.id })
+      .populate({ path: 'inputs', model: Input })
+      .sort({
+        date: -1,
+      });
 
     res.json(exercises);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    POST api/exercise
+// @desc     create an exercise
+// @access   Private
+router.post('/', [auth], async (req, res) => {
+  try {
+    console.log('here');
+
+    const exercise = new Exercise({
+      name: req.body.name,
+      user: req.user.id,
+      inputs: [],
+    });
+
+    const input = new Input({
+      weight: req.body.weight,
+      sets: req.body.sets,
+      reps: req.body.reps,
+      type: req.body.type,
+      date: req.body.date,
+      user: req.user.id,
+      exercise: exercise._id,
+    });
+
+    exercise.inputs.push(input._id);
+
+    const inp = await input.save();
+    const ex = await exercise.save();
+
+    res.json({ ...ex, inputs: [inp] });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
@@ -29,10 +70,13 @@ router.get('/', [auth], async (req, res) => {
 // @access   Private
 router.get('/:id', [auth, checkObjectId('id')], async (req, res) => {
   try {
-    const exercise = await Exercise.findById(req.params.id).populate({
-      path: 'workouts',
-      model: Workout,
-    });
+    console.log('here');
+    const exercise = await Exercise.findById(req.params.id)
+      .populate({
+        path: 'workouts',
+        model: Workout,
+      })
+      .populate({ path: 'inputs', model: Input });
 
     res.json(exercise);
   } catch (err) {
@@ -53,54 +97,11 @@ router.delete('/:id', [auth, checkObjectId('id')], async (req, res) => {
       { $pull: { exercises: req.params.id } }
     );
 
-    exercise.delete();
+    await Input.deleteMany({ _id: { $in: exercise.workouts } });
+
+    await exercise.delete();
 
     res.json({ _id: req.params.id });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
-  }
-});
-
-// @route    PUT api/exercise/:id/input/:input_id
-// @desc     Delete an input of the exercise
-// @access   Private
-router.put(
-  '/:id/delete-input/:input_id',
-  [auth, checkObjectId('id')],
-  async (req, res) => {
-    console.log(req.params);
-    try {
-      const exercise = await Exercise.findByIdAndUpdate(
-        req.params.id,
-        {
-          $pull: { inputs: { _id: req.params.input_id } },
-        },
-        { returnOriginal: false }
-      );
-
-      res.json(exercise);
-    } catch (err) {
-      console.error(err.message);
-      res.status(500).send('Server Error');
-    }
-  }
-);
-
-// @route    PUT api/exercise/:id/input
-// @desc     add an input to the exercise
-// @access   Private
-router.put('/:id/add-input', [auth, checkObjectId('id')], async (req, res) => {
-  try {
-    const exercise = await Exercise.findByIdAndUpdate(
-      req.params.id,
-      {
-        $push: { inputs: { $each: [req.body.input], $sort: { date: 1 } } },
-      },
-      { returnOriginal: false }
-    );
-
-    res.json(exercise);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
