@@ -35,8 +35,6 @@ router.get('/', [auth], async (req, res) => {
 // @access   Private
 router.post('/', [auth], async (req, res) => {
   try {
-    console.log('here');
-
     const exercise = new Exercise({
       name: req.body.name,
       user: req.user.id,
@@ -70,7 +68,6 @@ router.post('/', [auth], async (req, res) => {
 // @access   Private
 router.get('/:id', [auth, checkObjectId('id')], async (req, res) => {
   try {
-    console.log('here');
     const exercise = await Exercise.findById(req.params.id)
       .populate({
         path: 'workouts',

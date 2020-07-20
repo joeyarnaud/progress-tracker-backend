@@ -49,7 +49,7 @@ router.post(
       await input.save();
 
       await Exercise.findByIdAndUpdate(req.params.id, {
-        $push: { inputs: req.params.id },
+        $push: { inputs: input._id },
       });
 
       res.json(input);
