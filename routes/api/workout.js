@@ -18,7 +18,7 @@ router.post(
     auth,
     [
       check('name', 'Text is required').not().isEmpty(),
-      check('exercises').not().isEmpty(),
+      // check('exercises').not().isEmpty(),
     ],
   ],
   async (req, res) => {
@@ -95,6 +95,22 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+// @route GET api/workout/unfinished
+// @desc get workouts that aren't yet finished
+// @access Private
+router.get('/unfinished', auth, async (req, res) => {
+  try {
+    const workouts = await Workout.find({
+      $or: [{ submitted: false }, { exercises: { $size: 0 } }],
+    });
+
+    res.json(workouts);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
 // @route    GET api/workout/:id
 // @desc     Get the data of a specific workout
 // @access   Private
@@ -148,24 +164,30 @@ router.put(
       const exercise = new Exercise({
         name: req.body.name,
         user: req.user.id,
-        inputs: [
-          {
-            weight: req.body.weight,
-            sets: req.body.sets,
-            reps: req.body.reps,
-            type: req.body.type,
-            date: req.body.date,
-          },
-        ],
+        inputs: [],
         workouts: [req.params.id],
       });
+
+      const input = new Input({
+        weight: req.body.weight,
+        sets: req.body.sets,
+        reps: req.body.reps,
+        type: req.body.type,
+        date: new Date(),
+        user: req.user.id,
+        exercise: exercise._id,
+      });
+
+      exercise.inputs.push(input._id);
+
+      input.save();
+      exercise.save();
 
       const workout = await Workout.findByIdAndUpdate(req.params.id, {
         $push: { exercises: exercise._id },
       });
 
       workout.save();
-      exercise.save();
 
       res.json(exercise);
     } catch (err) {
@@ -194,5 +216,25 @@ router.put(
     }
   }
 );
+
+// @route PUT api/workout/submit/:id
+// @desc submit a workout
+// @access Private
+router.put('/submit/:id', [auth, checkObjectId('id')], async (req, res) => {
+  try {
+    const workout = await Workout.findByIdAndUpdate(
+      req.params.id,
+      {
+        $set: { submitted: true },
+      },
+      { returnOriginal: false }
+    ).populate({ path: 'exercises', model: Exercise });
+
+    res.json(workout);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
 
 module.exports = router;

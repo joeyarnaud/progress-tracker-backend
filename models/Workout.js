@@ -16,6 +16,10 @@ const WorkoutSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  submitted: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 module.exports = mongoose.model('workout', WorkoutSchema);
