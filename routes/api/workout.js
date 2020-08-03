@@ -38,8 +38,6 @@ router.post(
         user: req.user.id,
       });
 
-      console.log(newWorkout);
-
       for (exercise in req.body.exercises) {
         const newExercise = new Exercise({
           name: req.body.exercises[exercise].name,
@@ -173,7 +171,7 @@ router.put(
         sets: req.body.sets,
         reps: req.body.reps,
         type: req.body.type,
-        date: new Date(),
+        date: req.body.date ? req.body.date : new Date(),
         user: req.user.id,
         exercise: exercise._id,
       });
@@ -183,13 +181,22 @@ router.put(
       input.save();
       exercise.save();
 
-      const workout = await Workout.findByIdAndUpdate(req.params.id, {
-        $push: { exercises: exercise._id },
+      const workout = await Workout.findByIdAndUpdate(
+        req.params.id,
+        {
+          $push: { exercises: exercise._id },
+        },
+        { returnOriginal: false }
+      ).populate({
+        path: 'exercises',
+        model: Exercise,
+        populate: {
+          path: 'inputs',
+          model: Input,
+        },
       });
 
-      workout.save();
-
-      res.json(exercise);
+      res.json(workout);
     } catch (err) {
       console.error(err.message);
       res.status(500).send('Server Error');

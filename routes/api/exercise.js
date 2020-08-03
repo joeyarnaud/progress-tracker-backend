@@ -16,7 +16,6 @@ const checkObjectId = require('../../middleware/checkObjectId');
 // @access   Private
 router.get('/', [auth], async (req, res) => {
   try {
-    console.log('here');
     const exercises = await Exercise.find({ user: req.user.id })
       .populate({ path: 'inputs', model: Input })
       .sort({
