@@ -3,7 +3,6 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const auth = require('../../middleware/auth');
 const jwt = require('jsonwebtoken');
-const config = require('config');
 const { check, validationResult } = require('express-validator');
 
 const tokenList = {};
@@ -51,11 +50,11 @@ router.post(
         },
       };
 
-      const token = jwt.sign(payload, config.get('jwtSecret'), {
-        expiresIn: config.get('tokenLife'),
+      const token = jwt.sign(payload, process.env.jwtSecret, {
+        expiresIn: process.env.tokenLife,
       });
-      const refreshToken = jwt.sign(payload, config.get('refreshTokenSecret'), {
-        expiresIn: config.get('refreshTokenLife'),
+      const refreshToken = jwt.sign(payload, process.env.refreshTokenSecret, {
+        expiresIn: process.env.refreshTokenLife,
       });
 
       const response = {
@@ -88,21 +87,17 @@ router.post('/token', (req, res) => {
 
   // Verify token
   try {
-    jwt.verify(token, config.get('refreshTokenSecret'), (error, decoded) => {
+    jwt.verify(token, process.env.refreshTokenSecret, (error, decoded) => {
       if (error) {
         return res.status(401).json({ msg: 'Refresh Token is not valid' });
       } else {
-        const token = jwt.sign(payload, config.get('jwtSecret'), {
-          expiresIn: config.get('tokenLife'),
+        const token = jwt.sign(payload, process.env.jwtSecret, {
+          expiresIn: process.env.tokenLife,
         });
 
-        const refreshToken = jwt.sign(
-          payload,
-          config.get('refreshTokenSecret'),
-          {
-            expiresIn: config.get('refreshTokenLife'),
-          }
-        );
+        const refreshToken = jwt.sign(payload, process.env.refreshTokenSecret, {
+          expiresIn: process.env.refreshTokenLife,
+        });
 
         const response = {
           status: 'Logged In',
