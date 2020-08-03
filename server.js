@@ -21,9 +21,9 @@ app.use('/api/workout', require('./routes/api/workout'));
 app.use('/api/exercise', require('./routes/api/exercise'));
 app.use('/api/input', require('./routes/api/input'));
 
-// app.get('/', (req, res) => {
-//   res.send('Here');
-// });
+app.get('/', (req, res) => {
+  res.send('Here');
+});
 
 app.listen(port, () =>
   console.log(`Sever listening at http://localhost:${port}`)
