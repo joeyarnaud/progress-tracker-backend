@@ -1,4 +1,6 @@
-require('dotenv').config();
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
@@ -6,7 +8,7 @@ const connectDB = require('./config/db');
 connectDB();
 
 const app = express();
-const port = 8080;
+const port = process.env.PORT || 8080;
 
 // Init Middleware
 app.use(express.json());
