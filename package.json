@@ -23,6 +23,7 @@
     "jsonwebtoken": "^8.5.1",
     "mongodb": "^3.5.8",
     "mongoose": "^5.9.18",
+    "nodemon": "^2.0.4",
     "normalize-url": "^5.0.0",
     "query-string": "^6.13.1"
   }
