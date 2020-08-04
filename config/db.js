@@ -8,8 +8,8 @@ const connectDB = async () => {
       useFindAndModify: false,
       useUnifiedTopology: true,
     });
-
-    console.log('MongoDB Connected...');
+    // console.log(process.env.)
+    console.log(`MongoDB Connected on ${process.env.mongoURI}`);
   } catch (err) {
     console.error(err.message);
     // Exit process with failure
