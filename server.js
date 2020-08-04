@@ -8,7 +8,7 @@ const connectDB = require('./config/db');
 connectDB();
 
 const app = express();
-const port = process.env.PORT || 8080;
+const port = 8080;
 
 // Init Middleware
 app.use(express.json());
@@ -26,5 +26,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(port, () =>
-  console.log(`Sever listening at http://localhost:${port}`)
+  console.log(`Server listening at http://localhost:${port}`)
 );
