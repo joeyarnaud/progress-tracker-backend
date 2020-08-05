@@ -4,6 +4,12 @@ const bcrypt = require('bcryptjs');
 const auth = require('../../middleware/auth');
 const jwt = require('jsonwebtoken');
 const { check, validationResult } = require('express-validator');
+var cors = require('cors');
+
+var corsOptions = {
+  origin: process.env.CORS_ORIGIN,
+  optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+};
 
 const tokenList = {};
 
@@ -14,6 +20,7 @@ const User = require('../../models/User');
 // @access   Public
 router.post(
   '/login',
+  cors(corsOptions),
   [
     check('email', 'Please include a valid email').isEmail(),
     check('password', 'Password is required').exists(),
@@ -73,7 +80,7 @@ router.post(
   }
 );
 
-router.post('/token', (req, res) => {
+router.post('/token', cors(corsOptions), (req, res) => {
   // refresh the damn token
   const token = req.body.refreshToken;
   const { user } = jwt.decode(token);

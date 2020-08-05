@@ -1,6 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { check, validationResult } = require('express-validator');
+var cors = require('cors');
+
+var corsOptions = {
+  origin: process.env.CORS_ORIGIN,
+  optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+};
+
 const auth = require('../../middleware/auth');
 
 const Workout = require('../../models/Workout');
@@ -14,6 +21,7 @@ const checkObjectId = require('../../middleware/checkObjectId');
 // @access   Private
 router.post(
   '/create',
+  cors(corsOptions),
   [
     auth,
     [
@@ -78,7 +86,7 @@ router.post(
 // @route    GET api/workout
 // @desc     Get all workouts
 // @access   Private
-router.get('/', auth, async (req, res) => {
+router.get('/', cors(corsOptions), auth, async (req, res) => {
   try {
     const workouts = await Workout.find({ user: req.user.id })
       .populate({ path: 'exercises', model: Exercise })
@@ -96,7 +104,7 @@ router.get('/', auth, async (req, res) => {
 // @route GET api/workout/unfinished
 // @desc get workouts that aren't yet finished
 // @access Private
-router.get('/unfinished', auth, async (req, res) => {
+router.get('/unfinished', cors(corsOptions), auth, async (req, res) => {
   try {
     const workouts = await Workout.find({
       $or: [{ submitted: false }, { exercises: { $size: 0 } }],
@@ -112,50 +120,61 @@ router.get('/unfinished', auth, async (req, res) => {
 // @route    GET api/workout/:id
 // @desc     Get the data of a specific workout
 // @access   Private
-router.get('/:id', [auth, checkObjectId('id')], async (req, res) => {
-  try {
-    const workout = await Workout.findById(req.params.id).populate({
-      path: 'exercises',
-      model: Exercise,
-      populate: {
-        path: 'inputs',
-        model: Input,
-      },
-    });
+router.get(
+  '/:id',
+  cors(corsOptions),
+  [auth, checkObjectId('id')],
+  async (req, res) => {
+    try {
+      const workout = await Workout.findById(req.params.id).populate({
+        path: 'exercises',
+        model: Exercise,
+        populate: {
+          path: 'inputs',
+          model: Input,
+        },
+      });
 
-    res.json(workout);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
+      res.json(workout);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+    }
   }
-});
+);
 
 // @route DELETE api/workout/:id
 // @desc Delete the data of a workout
 // @access Private
-router.delete('/:id', [auth, checkObjectId('id')], async (req, res) => {
-  try {
-    const workout = await Workout.findById(req.params.id);
+router.delete(
+  '/:id',
+  cors(corsOptions),
+  [auth, checkObjectId('id')],
+  async (req, res) => {
+    try {
+      const workout = await Workout.findById(req.params.id);
 
-    await Exercise.updateMany(
-      { _id: { $in: workout.exercises } },
-      { $pull: { workouts: req.params.id } }
-    );
+      await Exercise.updateMany(
+        { _id: { $in: workout.exercises } },
+        { $pull: { workouts: req.params.id } }
+      );
 
-    workout.delete();
+      workout.delete();
 
-    res.json({ _id: req.params.id });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
+      res.json({ _id: req.params.id });
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+    }
   }
-});
+);
 
 // @route PUT api/workout/:id
 // @desc add an exercise to a workout
 // @access Private
 router.put(
   '/add-exercise/:id',
+  cors(corsOptions),
   [auth, checkObjectId('id')],
   async (req, res) => {
     try {
@@ -209,6 +228,7 @@ router.put(
 // @access Private
 router.put(
   '/change-name/:id',
+  cors(corsOptions),
   [auth, checkObjectId('id')],
   async (req, res) => {
     try {
@@ -227,21 +247,26 @@ router.put(
 // @route PUT api/workout/submit/:id
 // @desc submit a workout
 // @access Private
-router.put('/submit/:id', [auth, checkObjectId('id')], async (req, res) => {
-  try {
-    const workout = await Workout.findByIdAndUpdate(
-      req.params.id,
-      {
-        $set: { submitted: true },
-      },
-      { returnOriginal: false }
-    ).populate({ path: 'exercises', model: Exercise });
+router.put(
+  '/submit/:id',
+  cors(corsOptions),
+  [auth, checkObjectId('id')],
+  async (req, res) => {
+    try {
+      const workout = await Workout.findByIdAndUpdate(
+        req.params.id,
+        {
+          $set: { submitted: true },
+        },
+        { returnOriginal: false }
+      ).populate({ path: 'exercises', model: Exercise });
 
-    res.json(workout);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
+      res.json(workout);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+    }
   }
-});
+);
 
 module.exports = router;

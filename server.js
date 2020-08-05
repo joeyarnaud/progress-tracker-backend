@@ -1,6 +1,4 @@
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-}
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
@@ -25,6 +23,4 @@ app.get('/', (req, res) => {
   res.send('Here!!!');
 });
 
-app.listen(port, () =>
-  console.log(`Server listening at http://localhost:${port}`)
-);
+app.listen(port, () => console.log(`Server listening at port ${port}`));
