@@ -24,4 +24,8 @@ app.get('/', (req, res) => {
   res.send('Here!!!');
 });
 
-app.listen(port, () => console.log(`Server listening at port ${port}`));
+app.listen(port, () =>
+  console.log(
+    `Server listening at port ${port} \nCORS_ORIGIN: ${process.env.CORS_ORIGIN}`
+  )
+);
