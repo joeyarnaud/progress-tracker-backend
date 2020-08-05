@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.7"
 services:
   progress-tracker-db:
     image: mongo
@@ -18,9 +18,11 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - .:/app
+      - ./app
     depends_on:
       - progress-tracker-db
+    environment:
+      - mongoURI=mongodb://progress-tracker-db:27017/progress-tracker-app
     networks:
       - progress-tracker-network
 
