@@ -1,24 +1,33 @@
-version: '3'
+version: '3.7'
 services:
-  app:
-    container_name: docker-node-mongo
+  progress-tracker-db:
+    image: mongo
+    restart: always
+    container_name: progress-tracker-db
+    ports:
+      - 27017:27017
+    volumes:
+      - progress-tracker-db:/data/db
+    networks:
+      - progress-tracker-network
+
+  progress-tracker-app:
+    container_name: progress-tracker-app
     restart: always
     build: .
     ports:
       - 8080:8080
-    links:
-      - mongo
+    volumes:
+      - .:/app
     depends_on:
-      - mongo
-    volumes:
-      - .:/usr/src/app
-  mongo:
-    container_name: mongo
-    image: mongo:latest
-    ports:
-      - 27017:27017
-    volumes:
-      - data:/data/db
+      - progress-tracker-db
+    networks:
+      - progress-tracker-network
 
 volumes:
-  data:
+  progress-tracker-db:
+    name: progress-tracker-db
+
+networks:
+  progress-tracker-network:
+    name: progress-tracker-network
