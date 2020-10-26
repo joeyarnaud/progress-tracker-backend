@@ -44,6 +44,7 @@ router.post(
         name: req.body.name,
         exercises: [],
         user: req.user.id,
+        submitted: req.body.submitted ? true : false,
       });
 
       for (exercise in req.body.exercises) {
@@ -108,7 +109,10 @@ router.get('/unfinished', cors(corsOptions), auth, async (req, res) => {
   try {
     const workouts = await Workout.find({
       $or: [{ submitted: false }, { exercises: { $size: 0 } }],
-    });
+    }).populate({
+      path: 'exercises',
+      model: Exercise
+  });
 
     res.json(workouts);
   } catch (err) {

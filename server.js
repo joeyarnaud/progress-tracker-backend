@@ -26,6 +26,9 @@ app.get('/', (req, res) => {
 
 app.listen(port, () =>
   console.log(
-    `Server listening at port ${port} \nCORS_ORIGIN: ${process.env.CORS_ORIGIN}`
+    `Server listening at port ${port} \nCORS_ORIGIN: ${process.env.CORS_ORIGIN} \n jwtSecret = ${process.env.jwtSecret} \n
+    refreshTokenSecret=${process.env.refreshTokenSecret} \n
+    tokenLife=${process.env.tokenLife} \n
+    refreshTokenLife=${process.env.refreshTokenLife} \n `
   )
 );
